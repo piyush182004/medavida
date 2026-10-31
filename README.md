@@ -63,15 +63,24 @@ npm run dev
 
 ## Deploy
 
-**Backend on Render.** Create a Web Service from the repo, then set:
-- Root directory: `backend`
-- Build: `pip install -r requirements.txt`
-- Start: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
-- Env vars: `SECRET_KEY` (a long random value), `PYTHON_VERSION=3.11.9`, optional `CORS_ORIGINS=https://<your-app>.vercel.app`
+The stack is **Neon** (PostgreSQL), **Render** (FastAPI) and **Vercel** (Next.js).
 
-You can use `backend/render.yaml` as a blueprint instead. SQLite works out of the box but resets when the service redeploys. To keep data, attach a free Render Postgres and set `DATABASE_URL`.
+1. **Database on Neon.** Create a project and copy the connection string. Use the **direct** one: its host has no `-pooler` and it ends in `?sslmode=require`. The app uses session-level Postgres locks, which need a direct connection.
+2. **API on Render.** Create a Web Service from this repo (or use the `render.yaml` blueprint) with these settings:
+   - Root directory: `backend`
+   - Build: `pip install -r requirements.txt`
+   - Start: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+   - Env vars:
+     - `DATABASE_URL` set to the Neon string.
+     - `SECRET_KEY` set to a long random value.
+     - `PYTHON_VERSION=3.11.9`.
+     - `OPENROUTER_API_KEY` (optional).
+     - `CORS_ORIGINS=*` or your Vercel URL.
 
-**Frontend on Vercel.** Import the repo, set Root Directory to `frontend` and add `NEXT_PUBLIC_API_URL=https://<your-api>.onrender.com`.
+   Tables and demo accounts are created on the first boot.
+3. **Web on Vercel.** Import this repo, set Root Directory to `frontend`, and add `NEXT_PUBLIC_API_URL=https://<your-api>.onrender.com` with no trailing slash. This value is baked in at build time, so if it changes, redeploy.
+
+The free Render tier sleeps after 15 minutes of inactivity, and the first request then takes about 50 seconds. Open `https://<your-api>.onrender.com/health` before a demo.
 
 ## How the rules are enforced (all server-side)
 
