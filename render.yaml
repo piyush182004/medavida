@@ -1,0 +1,26 @@
+# Render blueprint for the API. The database is Neon (or any PostgreSQL):
+# paste its connection string as DATABASE_URL in the Render dashboard.
+services:
+  - type: web
+    name: slotzero-api
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: DATABASE_URL
+        sync: false
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: SEED_DEMO
+        value: "true"
+      - key: CORS_ORIGINS
+        value: "*"
+      - key: AI_MODEL
+        value: nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free
